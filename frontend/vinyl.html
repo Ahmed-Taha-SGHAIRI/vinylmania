@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinyl Detail | Vinylmania</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script>window.API_BASE = '';</script>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">Vinylmania</a>
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="Search...">
+            </div>
+            <div class="cart-icon" onclick="toggleCart(true)">
+                🛒 <span id="cart-count">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="detail-container">
+        <a href="index.html" class="back-link">← Back to catalog</a>
+        
+        <div id="vinyl-detail-content" class="vinyl-detail">
+            <!-- Content injected by JS -->
+            <p>Loading details...</p>
+        </div>
+    </main>
+
+    <!-- Cart Sidebar (Same as index) -->
+    <div id="cart-overlay" class="cart-overlay" onclick="toggleCart(false)"></div>
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <span class="close-cart" onclick="toggleCart(false)">✕</span>
+        </div>
+        <div id="cart-items" class="cart-items"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cart-total-value">$0.00</span>
+            </div>
+            <form id="order-form" class="order-form">
+                <input type="text" id="customer-name" placeholder="Full Name" required>
+                <input type="email" id="customer-email" placeholder="Email Address" required>
+                <button type="submit" class="place-order-btn">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Added to cart ✓</div>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="javascript:window.scrollTo({top: 0, behavior: 'smooth'})" class="logo">Vinylmania</a>
+                <p>The biggest vinyl-selling website in Tunisia. Handpicked records for the serious collector.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">All Vinyls</a></li>
+                    <li><a href="index.html?genre=Rock">Rock</a></li>
+                    <li><a href="index.html?genre=Jazz">Jazz</a></li>
+                    <li><a href="index.html?genre=Hip Hop">Hip Hop</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect with Ahmed</h4>
+                <div class="social-links">
+                    <a href="https://facebook.com/AhmedTahaSghairi" class="social-link" target="_blank">Facebook: Ahmed Taha Sghairi</a>
+                    <a href="https://instagram.com/ahmedtahasghairi" class="social-link" target="_blank">Instagram: @ahmedtahasghairi</a>
+                    <a href="https://linkedin.com/in/AhmedTahaSghairi" class="social-link" target="_blank">LinkedIn: Ahmed Taha Sghairi</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Vinylmania Tunisia. All rights reserved.</p>
+            <p>Built by Ahmed Taha Sghairi</p>
+        </div>
+    </footer>
+
+    <script src="api.js"></script>
+    <script src="cart.js"></script>
+    <script>
+        async function loadDetail() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const container = document.getElementById('vinyl-detail-content');
+
+            if (!id) {
+                container.innerHTML = '<p>No vinyl ID provided.</p>';
+                return;
+            }
+
+            try {
+                const v = await window.fetchVinyl(id);
+                console.log('📦 Vinyl Data Received:', v);
+                if (!v) {
+                    container.innerHTML = '<p>Vinyl not found.</p>';
+                    return;
+                }
+
+                document.title = `${v.title} by ${v.artist} | Vinylmania`;
+
+                // Render main content immediately
+                container.innerHTML = `
+                    <div class="detail-image">
+                        <img src="${v.image_url}" alt="${v.title}" onerror="this.src='https://via.placeholder.com/600x600?text=No+Cover'">
+                    </div>
+                    <div class="detail-info">
+                        <h1>${v.title}</h1>
+                        <h2><a href="artist.html?name=${encodeURIComponent(v.artist)}" style="color: var(--accent); border-bottom: 1px solid transparent;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='transparent'">${v.artist}</a></h2>
+                        <div class="detail-tags">
+                            <span class="tag">${v.genre}</span>
+                            <span class="tag">${v.year}</span>
+                        </div>
+                        <div class="detail-price">$${v.price}</div>
+                        
+                        <div id="tracklist-section" class="tracklist-container">
+                            <h3>Tracklist</h3>
+                            <div class="track-rows" id="track-rows-container">
+                                <p style="color: var(--text-muted); font-size: 0.8rem; padding: 1rem 0;">Loading tracks...</p>
+                            </div>
+                        </div>
+
+                        <div class="detail-description">
+                            ${v.description || 'No description available for this release.'}
+                        </div>
+                        <button class="add-to-cart-btn large-add-btn" onclick='addToCart(${JSON.stringify(v).replace(/'/g, "&apos;")})'>Add to Cart</button>
+                    </div>
+                `;
+
+                // Now fetch tracks in background (if not already present in response)
+                if (v.tracklist && v.tracklist.length > 0) {
+                    renderTracks(v.tracklist);
+                } else {
+                    const tracks = await window.fetchTracks(id);
+                    renderTracks(tracks);
+                }
+
+            } catch (error) {
+                container.innerHTML = '<p>Error loading vinyl details.</p>';
+            }
+        }
+
+        function renderTracks(tracks) {
+            const container = document.getElementById('track-rows-container');
+            if (!container) return;
+
+            if (!tracks || tracks.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; padding: 1rem 0;">No tracklist available for this release.</p>';
+                return;
+            }
+
+            container.innerHTML = tracks.map((t, index) => `
+                <div class="track-row">
+                    <span class="track-pos">${index + 1}</span>
+                    <span class="track-title">${t.title}</span>
+                    <span class="track-duration">${t.duration}</span>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDetail);
+    </script>
+</body>
+</html>

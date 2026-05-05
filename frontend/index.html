@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinylmania | Rare grooves. Real wax.</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script>window.API_BASE = '';</script>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">Vinylmania</a>
+            <div class="search-container" style="display: flex; gap: 15px;">
+                <input type="text" id="search-input" class="search-input" placeholder="Search by title or artist...">
+            </div>
+            <div class="cart-icon" onclick="toggleCart(true)">
+                🛒 <span id="cart-count">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>Welcome to the biggest vinyl-selling website in Tunisia.</h1>
+        <p>We have vinyls for every music taste.</p>
+    </header>
+
+    <div class="genre-filter">
+        <button class="genre-pill active" data-genre="All">All</button>
+        <button class="genre-pill" data-genre="Rock">Rock</button>
+        <button class="genre-pill" data-genre="Jazz">Jazz</button>
+        <button class="genre-pill" data-genre="Hip Hop">Hip Hop</button>
+        <button class="genre-pill" data-genre="Electronic">Electronic</button>
+        <button class="genre-pill" data-genre="Soul">Soul</button>
+        <button class="genre-pill" data-genre="Classical">Classical</button>
+        <div class="year-filter" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <label for="year-input" style="color: var(--text-muted); font-size: 0.9rem;">Filter by Year:</label>
+            <input type="number" id="year-input" class="search-input" style="width: 100px; padding: 4px 10px;" placeholder="e.g. 1975">
+        </div>
+    </div>
+
+    <main id="vinyl-grid">
+        <!-- Cards injected by JS -->
+    </main>
+
+    <div class="load-more-container">
+        <button id="show-more-btn" class="show-more-btn" style="display: none;">Show More Records</button>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="cart-overlay" onclick="toggleCart(false)"></div>
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <span class="close-cart" onclick="toggleCart(false)">✕</span>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <!-- Items injected by JS -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cart-total-value">$0.00</span>
+            </div>
+            <form id="order-form" class="order-form">
+                <input type="text" id="customer-name" placeholder="Full Name" required>
+                <input type="email" id="customer-email" placeholder="Email Address" required>
+                <button type="submit" class="place-order-btn">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Added to cart ✓</div>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="javascript:window.scrollTo({top: 0, behavior: 'smooth'})" class="logo">Vinylmania</a>
+                <p>The biggest vinyl-selling website in Tunisia. Handpicked records for the serious collector.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">All Vinyls</a></li>
+                    <li><a href="index.html?genre=Rock">Rock</a></li>
+                    <li><a href="index.html?genre=Jazz">Jazz</a></li>
+                    <li><a href="index.html?genre=Hip Hop">Hip Hop</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect with Ahmed</h4>
+                <div class="social-links">
+                    <a href="https://facebook.com/AhmedTahaSghairi" class="social-link" target="_blank">Facebook: Ahmed Taha Sghairi</a>
+                    <a href="https://instagram.com/ahmedtahasghairi" class="social-link" target="_blank">Instagram: @ahmedtahasghairi</a>
+                    <a href="https://linkedin.com/in/AhmedTahaSghairi" class="social-link" target="_blank">LinkedIn: Ahmed Taha Sghairi</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Vinylmania Tunisia. All rights reserved.</p>
+            <p>Built by Ahmed Taha Sghairi</p>
+        </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="cart.js"></script>
+    <script>
+        let currentGenre = 'All';
+        let currentSearch = '';
+        let currentYear = '';
+        let currentOffset = 0;
+        const LIMIT = 50;
+
+        async function loadVinyls(append = false) {
+            const grid = document.getElementById('vinyl-grid');
+            const showMoreBtn = document.getElementById('show-more-btn');
+            
+            if (!append) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Loading amazing records...</p>';
+                currentOffset = 0;
+            }
+            
+            try {
+                const vinyls = await window.fetchVinyls(currentGenre, currentSearch, currentYear, '', currentOffset);
+                
+                if (!append && vinyls.length === 0) {
+                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No vinyls found matching your criteria.</p>';
+                    showMoreBtn.style.display = 'none';
+                    return;
+                }
+
+                const cardsHTML = vinyls.map(v => `
+                    <div class="vinyl-card ${v.is_bestseller ? 'bestseller-card' : ''}">
+                        <a href="vinyl.html?id=${v.id}">
+                            <div class="card-image-container">
+                                <img src="${v.image_url}" alt="${v.title}" class="vinyl-image" onerror="this.src='https://via.placeholder.com/400x400?text=No+Cover'">
+                                ${v.is_bestseller ? `<span class="bestseller-badge">Best selling album of ${v.year}</span>` : ''}
+                            </div>
+                        </a>
+                        <div class="vinyl-info">
+                            <h3 class="vinyl-title"><a href="vinyl.html?id=${v.id}">${v.title}</a></h3>
+                            <p class="vinyl-artist"><a href="artist.html?name=${encodeURIComponent(v.artist)}" style="color: var(--accent)">${v.artist}</a></p>
+                            <div class="vinyl-meta">
+                                <div class="price-box">
+                                    ${v.original_price ? `<span class="original-price">$${v.original_price}</span>` : ''}
+                                    <span class="vinyl-price">$${v.price}</span>
+                                </div>
+                                <button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(v).replace(/'/g, "&apos;")})'>Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                if (append) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = cardsHTML;
+                    while (temp.firstChild) {
+                        grid.appendChild(temp.firstChild);
+                    }
+                } else {
+                    grid.innerHTML = cardsHTML;
+                }
+
+                // Show/Hide button
+                if (vinyls.length === LIMIT) {
+                    showMoreBtn.style.display = 'inline-block';
+                } else {
+                    showMoreBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error(error);
+                if (!append) grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #ff4444;">Error loading catalog. Please try again.</p>';
+            }
+        }
+
+        // Show More Button Handler
+        document.getElementById('show-more-btn').addEventListener('click', () => {
+            currentOffset += LIMIT;
+            loadVinyls(true);
+        });
+
+        // Search Input Handler
+        const searchInput = document.getElementById('search-input');
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentSearch = e.target.value;
+                loadVinyls();
+            }, 300);
+        });
+
+        // Year Input Handler
+        const yearInput = document.getElementById('year-input');
+        yearInput.addEventListener('input', (e) => {
+            currentYear = e.target.value;
+            loadVinyls();
+        });
+
+        // Genre Filter Handler
+        document.querySelectorAll('.genre-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelector('.genre-pill.active').classList.remove('active');
+                pill.classList.add('active');
+                currentGenre = pill.dataset.genre;
+                loadVinyls();
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', loadVinyls);
+    </script>
+</body>
+</html>

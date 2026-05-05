@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Dashboard | Vinylmania</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script>window.API_BASE = '';</script>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">Vinylmania</a>
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="Search...">
+            </div>
+            <div class="cart-icon" onclick="toggleCart(true)">
+                🛒 <span id="cart-count">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="detail-container">
+        <a href="index.html" class="back-link">← Back to catalog</a>
+        
+        <header style="margin-bottom: 3rem;">
+            <p style="color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">Artist Profile</p>
+            <h1 id="artist-name" style="font-size: 4rem; font-family: 'Playfair Display', serif;">Artist Name</h1>
+            <p id="artist-count" style="color: var(--text-muted);">0 vinyls available</p>
+        </header>
+
+        <div id="vinyl-grid" style="padding: 0;">
+            <!-- Artist vinyls injected here -->
+        </div>
+
+        <div class="load-more-container">
+            <button id="show-more-btn" class="show-more-btn" style="display: none;">Show More from this Artist</button>
+        </div>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="cart-overlay" onclick="toggleCart(false)"></div>
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <span class="close-cart" onclick="toggleCart(false)">✕</span>
+        </div>
+        <div id="cart-items" class="cart-items"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cart-total-value">$0.00</span>
+            </div>
+            <form id="order-form" class="order-form">
+                <input type="text" id="customer-name" placeholder="Full Name" required>
+                <input type="email" id="customer-email" placeholder="Email Address" required>
+                <button type="submit" class="place-order-btn">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Added to cart ✓</div>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="javascript:window.scrollTo({top: 0, behavior: 'smooth'})" class="logo">Vinylmania</a>
+                <p>The biggest vinyl-selling website in Tunisia. Handpicked records for the serious collector.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">All Vinyls</a></li>
+                    <li><a href="index.html?genre=Rock">Rock</a></li>
+                    <li><a href="index.html?genre=Jazz">Jazz</a></li>
+                    <li><a href="index.html?genre=Hip Hop">Hip Hop</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect with Ahmed</h4>
+                <div class="social-links">
+                    <a href="https://facebook.com/AhmedTahaSghairi" class="social-link" target="_blank">Facebook: Ahmed Taha Sghairi</a>
+                    <a href="https://instagram.com/ahmedtahasghairi" class="social-link" target="_blank">Instagram: @ahmedtahasghairi</a>
+                    <a href="https://linkedin.com/in/AhmedTahaSghairi" class="social-link" target="_blank">LinkedIn: Ahmed Taha Sghairi</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Vinylmania Tunisia. All rights reserved.</p>
+            <p>Built by Ahmed Taha Sghairi</p>
+        </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="cart.js"></script>
+    <script>
+        let currentOffset = 0;
+        const LIMIT = 50;
+
+        async function loadArtistDashboard(append = false) {
+            const params = new URLSearchParams(window.location.search);
+            const artistName = params.get('name');
+            const nameHeader = document.getElementById('artist-name');
+            const countLabel = document.getElementById('artist-count');
+            const grid = document.getElementById('vinyl-grid');
+            const showMoreBtn = document.getElementById('show-more-btn');
+
+            if (!artistName) {
+                nameHeader.textContent = "No Artist Selected";
+                return;
+            }
+
+            if (!append) {
+                grid.innerHTML = '<p>Loading artist catalog...</p>';
+                currentOffset = 0;
+                nameHeader.textContent = artistName;
+                document.title = `${artistName} Dashboard | Vinylmania`;
+            }
+
+            try {
+                const vinyls = await window.fetchVinyls('', '', '', artistName, currentOffset);
+                
+                if (!append) {
+                    countLabel.textContent = `${vinyls.length} vinyls available in store`;
+                }
+                
+                if (!append && vinyls.length === 0) {
+                    grid.innerHTML = '<p>No vinyls found for this artist.</p>';
+                    showMoreBtn.style.display = 'none';
+                    return;
+                }
+
+                const cardsHTML = vinyls.map(v => `
+                    <div class="vinyl-card ${v.is_bestseller ? 'bestseller-card' : ''}">
+                        <a href="vinyl.html?id=${v.id}">
+                            <div class="card-image-container">
+                                <img src="${v.image_url}" alt="${v.title}" class="vinyl-image" onerror="this.src='https://via.placeholder.com/400x400?text=No+Cover'">
+                                ${v.is_bestseller ? `<span class="bestseller-badge">Best selling album of ${v.year}</span>` : ''}
+                            </div>
+                        </a>
+                        <div class="vinyl-info">
+                            <h3 class="vinyl-title"><a href="vinyl.html?id=${v.id}">${v.title}</a></h3>
+                            <p class="vinyl-artist">${v.artist}</p>
+                            <div class="vinyl-meta">
+                                <div class="price-box">
+                                    ${v.original_price ? `<span class="original-price">$${v.original_price}</span>` : ''}
+                                    <span class="vinyl-price">$${v.price}</span>
+                                </div>
+                                <button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(v).replace(/'/g, "&apos;")})'>Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                if (append) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = cardsHTML;
+                    while (temp.firstChild) {
+                        grid.appendChild(temp.firstChild);
+                    }
+                } else {
+                    grid.innerHTML = cardsHTML;
+                }
+
+                // Show/Hide button
+                if (vinyls.length === LIMIT) {
+                    showMoreBtn.style.display = 'inline-block';
+                } else {
+                    showMoreBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error(error);
+                if (!append) grid.innerHTML = '<p>Error loading artist dashboard.</p>';
+            }
+        }
+
+        // Show More Button Handler
+        document.getElementById('show-more-btn').addEventListener('click', () => {
+            currentOffset += LIMIT;
+            loadArtistDashboard(true);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => loadArtistDashboard(false));
+    </script>
+</body>
+</html>

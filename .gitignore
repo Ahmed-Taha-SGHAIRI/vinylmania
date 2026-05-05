@@ -1,0 +1,15 @@
+# Environment variables
+.env
+terraform.tfvars
+
+# Database files
+*.sqlite
+*.db
+
+# Node modules
+node_modules/
+
+# Terraform state
+*.tfstate
+*.tfstate.backup
+.terraform/
