@@ -2,7 +2,7 @@
 
 Vinylmania is a full-stack, cloud-native web application designed for browsing and managing a vinyl record collection. It is built with a highly available, scalable architecture on AWS using Terraform.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The application follows a standard 3-tier architecture:
 
@@ -12,7 +12,7 @@ The application follows a standard 3-tier architecture:
 -   **Traffic Management**: An **Application Load Balancer (ALB)** distributes traffic to the backend instances on port 3000.
 -   **Networking**: A custom **VPC** with public and private subnets across multiple Availability Zones, managed via NAT Gateways for secure outbound traffic.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 -   **Frontend**: HTML5, Vanilla CSS3, JavaScript (ES6+), Nginx.
 -   **Backend**: Node.js, Express.js.
@@ -21,7 +21,7 @@ The application follows a standard 3-tier architecture:
 -   **APIs**: Discogs API for music metadata.
 -   **Security**: JWT for authentication, Security Groups for network isolation.
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 .
@@ -36,7 +36,7 @@ The application follows a standard 3-tier architecture:
 └── README.md
 ```
 
-## 🚀 Deployment Guide
+## Deployment Guide
 
 ### Prerequisites
 
@@ -80,12 +80,12 @@ The application follows a standard 3-tier architecture:
 5.  **Access the Application**:
     Once the deployment is complete, Terraform will output the **Frontend Public IP**. Open this IP in your browser to access the store.
 
-## 🔐 Security Note
+## Security Note
 
 -   The database and backend instances are located in **private subnets** and are not directly accessible from the internet.
 -   Traffic is only allowed via the **ALB** (for backend) and port 80/22 (for frontend).
 -   Sensitive credentials (DB password, API tokens) are managed via Terraform variables and injected into the instances securely via `user_data`.
 
-## 📜 License
+## License
 
 This project was developed as part of the ISIMM Cloud Computing course.
