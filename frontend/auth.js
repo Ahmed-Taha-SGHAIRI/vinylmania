@@ -22,6 +22,8 @@ window.logout = () => {
 };
 
 window.apiFetch = async (url, options = {}) => {
+    const API_BASE = window.API_BASE || '';
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
     const token = window.getAuthToken();
     if (token) {
         options.headers = {
@@ -29,7 +31,7 @@ window.apiFetch = async (url, options = {}) => {
             'Authorization': `Bearer ${token}`
         };
     }
-    return fetch(url, options);
+    return fetch(fullUrl, options);
 };
 
 // Update Navbar based on auth state

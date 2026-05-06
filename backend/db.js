@@ -1,11 +1,10 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 let pool;
 
-if (process.env.DB_TYPE === 'mysql' || (process.env.DB_HOST && !process.env.DB_HOST.includes('endpoint'))) {
+if (process.env.DB_HOST) {
     console.log('🔗 Connecting to MySQL Database...');
     pool = mysql.createPool({
         host: process.env.DB_HOST,
@@ -20,12 +19,12 @@ if (process.env.DB_TYPE === 'mysql' || (process.env.DB_HOST && !process.env.DB_H
     });
 } else {
     console.log('📂 Falling back to Local SQLite Database for development...');
+    const sqlite3 = require('sqlite3').verbose();
     const dbPath = path.resolve(__dirname, 'database.sqlite');
     const db = new sqlite3.Database(dbPath);
     
     pool = {
         query: (sql, params = []) => {
-            // Basic translation for SQLite compatibility
             let translatedSql = sql
                 .replace(/INT AUTO_INCREMENT PRIMARY KEY/gi, 'INTEGER PRIMARY KEY AUTOINCREMENT')
                 .replace(/DATETIME DEFAULT CURRENT_TIMESTAMP/gi, 'DATETIME DEFAULT CURRENT_TIMESTAMP')

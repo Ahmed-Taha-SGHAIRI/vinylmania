@@ -78,6 +78,7 @@
         </div>
     </footer>
 
+    <script src="api.js"></script>
     <script src="auth.js"></script>
     <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -85,8 +86,9 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            const API_BASE = window.API_BASE || '';
             try {
-                const res = await fetch('/api/auth/login', {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })

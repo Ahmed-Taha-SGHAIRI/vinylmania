@@ -1,6 +1,8 @@
 #!/bin/bash
 apt update -y
-apt install -y git nodejs npm
+apt install -y git
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
 cd /home/ubuntu
 git clone https://github.com/${github_username}/vinylmania.git app
 cd app/backend

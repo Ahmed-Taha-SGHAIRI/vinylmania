@@ -1,3 +1,21 @@
+variable "aws_access_key" {
+  description = "AWS access key"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_secret_key" {
+  description = "AWS secret key"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_session_token" {
+  description = "AWS session token"
+  type        = string
+  sensitive   = true
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -31,7 +49,7 @@ variable "private_subnet_cidrs" {
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  default     = ["eu-west-3a", "eu-west-3b"]
+  default     = ["us-east-1a", "us-east-1b"]
 }
 
 variable "db_name" {
@@ -63,9 +81,9 @@ variable "jwt_secret" {
 }
 
 variable "ami_id" {
-  description = "Ubuntu 22.04 LTS AMI ID for eu-west-3"
+  description = "Ubuntu 22.04 LTS AMI ID for us-east-1"
   type        = string
-  default     = "ami-05b5a1205a96aa9bc" # Ubuntu 22.04 LTS in eu-west-3
+  default     = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS in us-east-1
 }
 
 variable "backend_instance_type" {
